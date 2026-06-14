@@ -5,6 +5,7 @@ import { dirname, join } from 'path'
 import tarefasRouter from './routes/tarefas.js'
 import { pushRouter } from './routes/push.js'
 import { startScheduler } from './notifications/scheduler.js'
+import { initDb } from './db/init.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -31,7 +32,12 @@ app.get('*', (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`)
-  startScheduler()
-})
+async function start() {
+  await initDb()
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`)
+    startScheduler()
+  })
+}
+
+start()

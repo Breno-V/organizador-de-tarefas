@@ -1,4 +1,4 @@
-import { getDb } from '../db/init.js'
+import { getPool } from '../db/init.js'
 import { webpush } from '../routes/push.js'
 
 const INTERVAL_MS = 30 * 60 * 1000
@@ -18,30 +18,31 @@ function sendNotification(sub, title, body) {
     tag: 'task-reminder',
     url: '/',
   })
-  webpush.sendNotification(sub, payload).catch(err => {
+  webpush.sendNotification(sub, payload).catch(async err => {
     if (err.statusCode === 410 || err.statusCode === 404) {
-      const db = getDb()
-      db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').run(sub.endpoint)
+      const db = getPool()
+      await db.query('DELETE FROM push_subscriptions WHERE endpoint = $1', [sub.endpoint])
     }
   })
 }
 
-function checkAndNotify() {
+async function checkAndNotify() {
   try {
-    const db = getDb()
+    const db = getPool()
     const today = getToday()
 
-    const subscriptions = db.prepare(
-      'SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE reminders = 1'
-    ).all()
+    const { rows: subscriptions } = await db.query(
+      'SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE reminders = true'
+    )
 
     if (subscriptions.length === 0) return
 
-    const dueTasks = db.prepare(
+    const { rows: dueTasks } = await db.query(
       `SELECT titulo, data_entrega FROM tarefas
-       WHERE concluida = 0 AND data_entrega IS NOT NULL AND data_entrega <= ?
-       ORDER BY data_entrega ASC`
-    ).all(today)
+       WHERE concluida = false AND data_entrega IS NOT NULL AND data_entrega <= $1
+       ORDER BY data_entrega ASC`,
+      [today]
+    )
 
     if (dueTasks.length === 0) return
 
@@ -78,7 +79,7 @@ function checkAndNotify() {
 }
 
 export function startScheduler() {
-  checkAndNotify()
-  setInterval(checkAndNotify, INTERVAL_MS)
+  checkAndNotify().catch(console.error)
+  setInterval(() => checkAndNotify().catch(console.error), INTERVAL_MS)
   console.log(`Notificações: verificando a cada ${INTERVAL_MS / 60000} minutos`)
 }

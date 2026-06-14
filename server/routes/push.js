@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getDb } from '../db/init.js'
+import { getPool } from '../db/init.js'
 import webpush from 'web-push'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { fileURLToPath } from 'url'
@@ -8,7 +8,6 @@ import { dirname, join } from 'path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const VAPID_PATH = join(__dirname, '..', 'vapid.json')
-const APP_URL = process.env.APP_URL || 'http://localhost:3001'
 
 function getVapidKeys() {
   if (existsSync(VAPID_PATH)) {
@@ -21,7 +20,7 @@ function getVapidKeys() {
 
 const vapidKeys = getVapidKeys()
 webpush.setVapidDetails(
-  `mailto:organizador@localhost`,
+  'mailto:organizador@localhost',
   vapidKeys.publicKey,
   vapidKeys.privateKey
 )
@@ -32,20 +31,26 @@ router.get('/vapid-public-key', (req, res) => {
   res.type('text/plain').send(vapidKeys.publicKey)
 })
 
-router.post('/subscribe', (req, res) => {
+router.post('/subscribe', async (req, res) => {
   try {
     const { endpoint, keys, reminders } = req.body
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
       return res.status(400).json({ error: 'Invalid subscription.' })
     }
-    const db = getDb()
-    const existing = db.prepare('SELECT id FROM push_subscriptions WHERE endpoint = ?').get(endpoint)
-    if (existing) {
-      db.prepare('UPDATE push_subscriptions SET p256dh = ?, auth = ?, reminders = ?, updated_at = datetime(\'now\') WHERE id = ?')
-        .run(keys.p256dh, keys.auth, reminders ? 1 : 0, existing.id)
+    const db = getPool()
+    const { rows: existing } = await db.query(
+      'SELECT id FROM push_subscriptions WHERE endpoint = $1', [endpoint]
+    )
+    if (existing.length > 0) {
+      await db.query(
+        'UPDATE push_subscriptions SET p256dh = $1, auth = $2, reminders = $3, updated_at = NOW() WHERE id = $4',
+        [keys.p256dh, keys.auth, reminders, existing[0].id]
+      )
     } else {
-      db.prepare('INSERT INTO push_subscriptions (endpoint, p256dh, auth, reminders) VALUES (?, ?, ?, ?)')
-        .run(endpoint, keys.p256dh, keys.auth, reminders ? 1 : 0)
+      await db.query(
+        'INSERT INTO push_subscriptions (endpoint, p256dh, auth, reminders) VALUES ($1, $2, $3, $4)',
+        [endpoint, keys.p256dh, keys.auth, reminders]
+      )
     }
     res.json({ ok: true })
   } catch (err) {
@@ -54,12 +59,12 @@ router.post('/subscribe', (req, res) => {
   }
 })
 
-router.post('/unsubscribe', (req, res) => {
+router.post('/unsubscribe', async (req, res) => {
   try {
     const { endpoint } = req.body
     if (!endpoint) return res.status(400).json({ error: 'Missing endpoint.' })
-    const db = getDb()
-    db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').run(endpoint)
+    const db = getPool()
+    await db.query('DELETE FROM push_subscriptions WHERE endpoint = $1', [endpoint])
     res.json({ ok: true })
   } catch (err) {
     console.error('Push unsubscribe error:', err)
