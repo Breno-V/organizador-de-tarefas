@@ -11,11 +11,17 @@ const __dirname = dirname(__filename)
 const VAPID_PATH = join(__dirname, '..', 'vapid.json')
 
 function getVapidKeys() {
+  const envPublic = process.env.VAPID_PUBLIC_KEY
+  const envPrivate = process.env.VAPID_PRIVATE_KEY
+  if (envPublic && envPrivate) {
+    return { publicKey: envPublic, privateKey: envPrivate }
+  }
   if (existsSync(VAPID_PATH)) {
     return JSON.parse(readFileSync(VAPID_PATH, 'utf-8'))
   }
   const keys = webpush.generateVAPIDKeys()
   writeFileSync(VAPID_PATH, JSON.stringify(keys, null, 2))
+  console.log('Chaves VAPID geradas e salvas em server/vapid.json')
   return keys
 }
 

@@ -56,6 +56,8 @@ npm run dev
 
 The server reads env vars from `server/.env` automatically via `--env-file` (built into Node 20.6+).
 
+> **For push notifications on Render:** set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in the Render dashboard. To generate keys, run `npm run dev` locally and copy from `server/vapid.json` — or run `npx web-push generate-vapid-keys --json`. If unset, the server auto-generates keys (fine for local dev — on Render, keys change on every deploy without fixed env vars).
+
 The client runs on `http://localhost:5173` and proxies API calls to the server on port `3001`.
 
 ### Build for production
