@@ -62,6 +62,15 @@ function CloseIcon() {
   )
 }
 
+function UserIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="8" cy="5.5" r="2.5" />
+      <path d="M3 14c0-2.5 2-4.5 5-4.5s5 2 5 4.5" />
+    </svg>
+  )
+}
+
 function Toggle({ checked, onChange, id }) {
   return (
     <button
@@ -76,7 +85,7 @@ function Toggle({ checked, onChange, id }) {
   )
 }
 
-export default function SettingsPanel({ open, onClose, theme, onToggleTheme, categories = [], onCategoryChange, tasks = [] }) {
+export default function SettingsPanel({ open, onClose, theme, onToggleTheme, categories = [], onCategoryChange, tasks = [], user, onOpenAccount }) {
   const panelRef = useRef(null)
   const [pushEnabled, setPushEnabled] = useState(false)
   const [reminderEnabled, setReminderEnabled] = useState(false)
@@ -405,6 +414,25 @@ export default function SettingsPanel({ open, onClose, theme, onToggleTheme, cat
               <ColorPicker value={newTagColor} onChange={setNewTagColor} />
               {tagError && <p className="drawer-tag-error">{tagError}</p>}
             </form>
+          </div>
+
+          <div className="drawer-group">
+            <div className="drawer-group-label">Conta</div>
+            <div className="drawer-item">
+              <div className="drawer-item-left">
+                <span className="drawer-item-icon"><UserIcon /></span>
+                <div>
+                  <div className="drawer-item-label">{user?.nome}</div>
+                  <div className="drawer-item-desc drawer-item-mono">{user?.email}</div>
+                </div>
+              </div>
+            </div>
+            <button className="drawer-account-btn" onClick={onOpenAccount}>
+              Gerenciar conta
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="5 3 9 7 5 11" />
+              </svg>
+            </button>
           </div>
 
           <div className="drawer-group">

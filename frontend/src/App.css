@@ -1549,6 +1549,124 @@ body {
   color: var(--urgent);
 }
 
+/* ---- Drawer Account Button ---- */
+.drawer-account-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 0;
+  margin-top: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.drawer-account-btn:hover {
+  opacity: 0.8;
+}
+
+.drawer-account-btn svg {
+  color: var(--text-secondary);
+}
+
+/* ---- Account Modal ---- */
+.account-email {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.modal-section {
+  margin-bottom: 24px;
+}
+
+.modal-section-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+
+.account-nome-form {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.account-nome-form .form-input {
+  flex: 1;
+}
+
+.account-btn {
+  white-space: nowrap;
+  padding: 10px 16px;
+}
+
+/* ---- Danger Zone ---- */
+.danger-zone {
+  margin-top: 4px;
+}
+
+.danger-zone-rule {
+  border: none;
+  border-top: 1px dashed var(--urgent);
+  margin-bottom: 12px;
+}
+
+.danger-zone-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--urgent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+
+.danger-zone-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.btn-danger {
+  background: var(--urgent);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.delete-confirm-box {
+  padding: 12px;
+  background: color-mix(in srgb, var(--urgent) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urgent) 25%, transparent);
+  border-radius: 8px;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 /* ---- Toggle Switch ---- */
 .toggle {
   position: relative;

@@ -7,6 +7,7 @@ import FormTarefa from './components/FormTarefa'
 import ProximasTarefas from './components/ProximasTarefas'
 import ConfirmDialog from './components/ConfirmDialog'
 import SettingsPanel from './components/SettingsPanel'
+import AccountModal from './components/AccountModal'
 import NotificationBanner from './components/NotificationBanner'
 import LoginForm from './components/LoginForm'
 import RegisterForm from './components/RegisterForm'
@@ -53,6 +54,7 @@ function InnerApp() {
   const [search, setSearch] = useState('')
   const [draggedId, setDraggedId] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [showAccount, setShowAccount] = useState(false)
   const toast = useToast()
 
   useEffect(() => {
@@ -225,6 +227,11 @@ function InnerApp() {
     setShowForm(true)
   }
 
+  function handleOpenAccount() {
+    setShowSettings(false)
+    setShowAccount(true)
+  }
+
   if (authLoading) return <LoadingScreen />
 
   if (!user) {
@@ -376,7 +383,12 @@ function InnerApp() {
         categories={categories}
         onCategoryChange={fetchCategories}
         tasks={tasks}
+        user={user}
+        onOpenAccount={handleOpenAccount}
       />
+      {showAccount && (
+        <AccountModal onClose={() => setShowAccount(false)} />
+      )}
     </div>
   )
 }

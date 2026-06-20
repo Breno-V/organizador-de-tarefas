@@ -103,4 +103,51 @@ router.post('/logout', (req, res) => {
   res.json({ ok: true })
 })
 
+router.put('/nome', authMiddleware, tryHandler(async (req, res) => {
+  const db = getPool()
+  const { nome } = req.body
+
+  if (!nome || !nome.trim()) {
+    return res.status(400).json({ error: 'O nome não pode ficar vazio.' })
+  }
+
+  await db.query('UPDATE usuarios SET nome = $1 WHERE id = $2', [nome.trim(), req.user.id])
+  res.json({ id: req.user.id, nome: nome.trim(), email: req.user.email })
+}))
+
+router.put('/senha', authMiddleware, tryHandler(async (req, res) => {
+  const db = getPool()
+  const { senha_atual, nova_senha } = req.body
+
+  if (!senha_atual) {
+    return res.status(400).json({ error: 'Digite sua senha atual.' })
+  }
+  if (!nova_senha || nova_senha.length < 6) {
+    return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres.' })
+  }
+
+  const { rows } = await db.query('SELECT senha_hash FROM usuarios WHERE id = $1', [req.user.id])
+  const match = await bcrypt.compare(senha_atual, rows[0].senha_hash)
+  if (!match) {
+    return res.status(401).json({ error: 'Senha atual incorreta.' })
+  }
+
+  const nova_hash = await bcrypt.hash(nova_senha, 10)
+  await db.query('UPDATE usuarios SET senha_hash = $1 WHERE id = $2', [nova_hash, req.user.id])
+  res.json({ ok: true })
+}))
+
+router.delete('/conta', authMiddleware, tryHandler(async (req, res) => {
+  const db = getPool()
+  const { confirmacao } = req.body
+
+  if (confirmacao !== 'DELETAR') {
+    return res.status(400).json({ error: 'Digite "DELETAR" para confirmar.' })
+  }
+
+  await db.query('DELETE FROM usuarios WHERE id = $1', [req.user.id])
+  res.clearCookie('token')
+  res.json({ ok: true, message: 'Conta apagada permanentemente.' })
+}))
+
 export default router

@@ -40,6 +40,10 @@ export function AuthProvider({ children }) {
     return data
   }, [])
 
+  const updateUser = useCallback((data) => {
+    setUser(prev => prev ? { ...prev, ...data } : null)
+  }, [])
+
   const logout = useCallback(async () => {
     try {
       await fetch('/api/auth/logout', {
@@ -51,7 +55,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )
