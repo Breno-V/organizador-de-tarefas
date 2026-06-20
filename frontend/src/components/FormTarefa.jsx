@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toLocalDate, hasTimeComponent } from '../utils/date'
 
-const CATEGORIES = [
-  { key: 'tecnico', label: 'Matéria Técnica' },
-  { key: 'normal', label: 'Matéria Normal' },
-  { key: 'eventos', label: 'Eventos' },
-  { key: 'domestica', label: 'Atividades Domésticas' },
-]
-
 function toInputDate(dateStr) {
   if (!dateStr) return ''
   const datePart = dateStr.split('T')[0]
@@ -31,13 +24,13 @@ function isPastDate(dateStr) {
   return target < today
 }
 
-export default function FormTarefa({ tarefa, onSave, onCancel }) {
+export default function FormTarefa({ tarefa, onSave, onCancel, categories = [] }) {
   const editing = !!tarefa
   const [titulo, setTitulo] = useState(tarefa?.titulo || '')
   const [descricao, setDescricao] = useState(tarefa?.descricao || '')
   const [dataEntrega, setDataEntrega] = useState(toInputDate(tarefa?.data_entrega) || '')
   const [horaEntrega, setHoraEntrega] = useState(toInputTime(tarefa?.data_entrega) || '23:59')
-  const [categorias, setCategorias] = useState(tarefa?.categorias || [])
+  const [categoriaIds, setCategoriaIds] = useState(tarefa?.categorias?.map(c => c.id) || [])
   const [dateError, setDateError] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -61,11 +54,11 @@ export default function FormTarefa({ tarefa, onSave, onCancel }) {
     }
   }
 
-  function toggleCat(cat) {
-    setCategorias(prev =>
-      prev.includes(cat)
-        ? prev.filter(c => c !== cat)
-        : [...prev, cat]
+  function toggleCat(id) {
+    setCategoriaIds(prev =>
+      prev.includes(id)
+        ? prev.filter(c => c !== id)
+        : [...prev, id]
     )
   }
 
@@ -82,7 +75,7 @@ export default function FormTarefa({ tarefa, onSave, onCancel }) {
       titulo: titulo.trim(),
       descricao: descricao.trim(),
       data_entrega: dataEntregaFinal,
-      categorias,
+      categorias: categoriaIds,
     })
     setSubmitting(false)
   }
@@ -151,13 +144,14 @@ export default function FormTarefa({ tarefa, onSave, onCancel }) {
           <div className="form-group">
             <label className="form-label">Categorias</label>
             <div className="form-categories">
-              {CATEGORIES.map(cat => (
+              {categories.map(cat => (
                 <div
-                  key={cat.key}
-                  className={`cat-check${categorias.includes(cat.key) ? ` selected ${cat.key}` : ''}`}
-                  onClick={() => toggleCat(cat.key)}
+                  key={cat.id}
+                  className={`cat-check${categoriaIds.includes(cat.id) ? ' selected' : ''}`}
+                  style={categoriaIds.includes(cat.id) ? { backgroundColor: cat.cor, borderColor: cat.cor, color: '#fff' } : {}}
+                  onClick={() => toggleCat(cat.id)}
                 >
-                  {cat.label}
+                  {cat.nome}
                 </div>
               ))}
             </div>

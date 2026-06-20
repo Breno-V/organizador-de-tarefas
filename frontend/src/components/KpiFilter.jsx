@@ -1,31 +1,30 @@
-const CATEGORIES = [
-  { key: null, label: 'Todas' },
-  { key: 'tecnico', label: 'Matéria Técnica' },
-  { key: 'normal', label: 'Matéria Normal' },
-  { key: 'eventos', label: 'Eventos' },
-  { key: 'domestica', label: 'Atividades Domésticas' },
-]
-
-export default function KpiFilter({ tasks, active, onChange }) {
+export default function KpiFilter({ tasks, active, onChange, categories = [] }) {
   const counts = {}
-  for (const cat of CATEGORIES) {
-    if (cat.key === null) {
-      counts[null] = tasks.length
-    } else {
-      counts[cat.key] = tasks.filter(t => t.categorias?.includes(cat.key)).length
-    }
+
+  counts['__all'] = tasks.length
+
+  for (const cat of categories) {
+    counts[cat.id] = tasks.filter(t => t.categorias?.some(c => c.id === cat.id)).length
   }
 
   return (
     <div className="kpi-bar">
-      {CATEGORIES.map(cat => (
+      <button
+        className={`kpi-btn${!active ? ' active' : ''}`}
+        onClick={() => onChange(null)}
+      >
+        Todas
+        <span className="kpi-count">{counts['__all']}</span>
+      </button>
+      {categories.map(cat => (
         <button
-          key={cat.key ?? '__all'}
-          className={`kpi-btn${(active === cat.key || (!active && cat.key === null)) ? ' active' : ''}`}
-          onClick={() => onChange(cat.key)}
+          key={cat.id}
+          className={`kpi-btn${active === cat.id ? ' active' : ''}`}
+          onClick={() => onChange(cat.id)}
         >
-          {cat.label}
-          <span className="kpi-count">{counts[cat.key]}</span>
+          <span className="kpi-dot" style={{ backgroundColor: cat.cor }} />
+          {cat.nome}
+          <span className="kpi-count">{counts[cat.id]}</span>
         </button>
       ))}
     </div>

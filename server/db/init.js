@@ -17,7 +17,9 @@ export async function initDb() {
     await client.query(`
       CREATE TABLE IF NOT EXISTS categorias (
         id SERIAL PRIMARY KEY,
-        nome TEXT NOT NULL UNIQUE
+        nome TEXT NOT NULL,
+        cor TEXT NOT NULL DEFAULT '#2B5F5F',
+        usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE
       );
       CREATE TABLE IF NOT EXISTS tarefas (
         id SERIAL PRIMARY KEY,
@@ -63,13 +65,25 @@ export async function initDb() {
         sent_at TIMESTAMP DEFAULT NOW(),
         UNIQUE(tarefa_id, milestone)
       );
+
+      ALTER TABLE categorias ADD COLUMN IF NOT EXISTS cor TEXT NOT NULL DEFAULT '#2B5F5F';
+      ALTER TABLE categorias ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE;
+      ALTER TABLE categorias DROP CONSTRAINT IF EXISTS categorias_nome_key;
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_cat_nome_global ON categorias(nome) WHERE usuario_id IS NULL;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_cat_nome_usuario ON categorias(nome, usuario_id) WHERE usuario_id IS NOT NULL;
+
+      UPDATE categorias SET cor = '#2B5F5F' WHERE nome = 'tecnico' AND usuario_id IS NULL;
+      UPDATE categorias SET cor = '#4A7B5C' WHERE nome = 'normal' AND usuario_id IS NULL;
+      UPDATE categorias SET cor = '#C47A2E' WHERE nome = 'eventos' AND usuario_id IS NULL;
+      UPDATE categorias SET cor = '#8B6F9E' WHERE nome = 'domestica' AND usuario_id IS NULL;
     `)
 
-    const { rows } = await client.query('SELECT COUNT(*)::int as c FROM categorias')
+    const { rows } = await client.query('SELECT COUNT(*)::int as c FROM categorias WHERE usuario_id IS NULL')
     if (rows[0].c === 0) {
       await client.query(
-        'INSERT INTO categorias (nome) VALUES ($1), ($2), ($3), ($4)',
-        ['tecnico', 'normal', 'eventos', 'domestica']
+        'INSERT INTO categorias (nome, cor) VALUES ($1, $2), ($3, $4), ($5, $6), ($7, $8)',
+        ['tecnico', '#2B5F5F', 'normal', '#4A7B5C', 'eventos', '#C47A2E', 'domestica', '#8B6F9E']
       )
     }
 

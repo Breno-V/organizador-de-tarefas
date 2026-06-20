@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { urlBase64ToUint8Array } from '../utils/push'
+import ColorPicker from './ColorPicker'
+import { useToast } from './Toast'
 
 async function unsubscribePush(swReg) {
   const sub = await swReg.pushManager.getSubscription()
@@ -74,7 +76,7 @@ function Toggle({ checked, onChange, id }) {
   )
 }
 
-export default function SettingsPanel({ open, onClose, theme, onToggleTheme }) {
+export default function SettingsPanel({ open, onClose, theme, onToggleTheme, categories = [], onCategoryChange, tasks = [] }) {
   const panelRef = useRef(null)
   const [pushEnabled, setPushEnabled] = useState(false)
   const [reminderEnabled, setReminderEnabled] = useState(false)
@@ -190,6 +192,61 @@ export default function SettingsPanel({ open, onClose, theme, onToggleTheme }) {
     return () => document.removeEventListener('keydown', handleKey)
   }, [open, onClose])
 
+  const [newTagName, setNewTagName] = useState('')
+  const [newTagColor, setNewTagColor] = useState('#2B5F5F')
+  const [tagSubmitting, setTagSubmitting] = useState(false)
+  const [tagError, setTagError] = useState('')
+  const toast = useToast()
+
+  const tagCounts = {}
+  for (const t of tasks) {
+    if (!t.categorias) continue
+    for (const c of t.categorias) {
+      tagCounts[c.id] = (tagCounts[c.id] || 0) + 1
+    }
+  }
+
+  async function handleAddTag(e) {
+    e.preventDefault()
+    if (!newTagName.trim()) return
+    setTagSubmitting(true)
+    setTagError('')
+    try {
+      const res = await fetch('/api/categorias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ nome: newTagName.trim(), cor: newTagColor }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Erro ao criar tag')
+      }
+      setNewTagName('')
+      setNewTagColor('#2B5F5F')
+      onCategoryChange()
+      toast('Tag criada')
+    } catch (err) {
+      setTagError(err.message)
+    } finally {
+      setTagSubmitting(false)
+    }
+  }
+
+  async function handleDeleteTag(id) {
+    try {
+      const res = await fetch(`/api/categorias/${id}`, { method: 'DELETE', credentials: 'include' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Erro ao excluir tag')
+      }
+      onCategoryChange()
+      toast('Tag excluída')
+    } catch (err) {
+      toast(err.message, 'error')
+    }
+  }
+
   return (
     <>
       <div className={`drawer-overlay ${open ? 'drawer-overlay--open' : ''}`} onClick={handleOverlayClick} />
@@ -297,6 +354,57 @@ export default function SettingsPanel({ open, onClose, theme, onToggleTheme }) {
                 onChange={onToggleTheme}
               />
             </div>
+          </div>
+
+          <div className="drawer-group">
+            <div className="drawer-group-label">Tags</div>
+
+            {categories.length === 0 ? (
+              <p className="drawer-tag-empty">Nenhuma tag ainda.</p>
+            ) : (
+              <div className="drawer-tag-list">
+                {categories.map(cat => (
+                  <div key={cat.id} className="drawer-tag-item">
+                    <span className="drawer-tag-color" style={{ backgroundColor: cat.cor }} />
+                    <span className="drawer-tag-name">{cat.nome}</span>
+                    <span className="drawer-tag-badge">{tagCounts[cat.id] || 0}</span>
+                    <button
+                      className="drawer-tag-delete"
+                      onClick={() => handleDeleteTag(cat.id)}
+                      aria-label={`Excluir tag ${cat.nome}`}
+                      title="Excluir"
+                    >
+                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" width="14" height="14">
+                        <line x1="3" y1="3" x2="13" y2="13" />
+                        <line x1="13" y1="3" x2="3" y2="13" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <form className="drawer-tag-form" onSubmit={handleAddTag}>
+              <div className="drawer-tag-form-row">
+                <input
+                  className="drawer-tag-input"
+                  type="text"
+                  placeholder="Nome da tag"
+                  value={newTagName}
+                  onChange={e => { setNewTagName(e.target.value); setTagError('') }}
+                  maxLength={30}
+                />
+                <button
+                  type="submit"
+                  className="drawer-tag-add-btn"
+                  disabled={tagSubmitting || !newTagName.trim()}
+                >
+                  {tagSubmitting ? '…' : '+ Nova'}
+                </button>
+              </div>
+              <ColorPicker value={newTagColor} onChange={setNewTagColor} />
+              {tagError && <p className="drawer-tag-error">{tagError}</p>}
+            </form>
           </div>
 
           <div className="drawer-group">

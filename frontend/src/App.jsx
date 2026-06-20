@@ -40,8 +40,13 @@ function InnerApp() {
   const { user, loading: authLoading, logout } = useAuth()
   const [showRegister, setShowRegister] = useState(false)
   const [tasks, setTasks] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState(() => localStorage.getItem('taskFilter') || null)
+  const [filter, setFilter] = useState(() => {
+    const stored = localStorage.getItem('taskFilter')
+    const n = Number(stored)
+    return Number.isInteger(n) && n > 0 ? n : null
+  })
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
@@ -70,7 +75,17 @@ function InnerApp() {
     }
   }, [toast])
 
-  useEffect(() => { if (user) fetchTasks() }, [fetchTasks, user])
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/categorias`, { credentials: 'include' })
+      const data = await res.json()
+      setCategories(data)
+    } catch (err) {
+      console.error('Erro ao carregar categorias:', err)
+    }
+  }, [])
+
+  useEffect(() => { if (user) { fetchTasks(); fetchCategories() } }, [fetchTasks, fetchCategories, user])
 
   useEffect(() => {
     if (!user || tasks.length === 0) return
@@ -86,8 +101,8 @@ function InnerApp() {
   }, [user, tasks])
 
   useEffect(() => {
-    if (filter) {
-      localStorage.setItem('taskFilter', filter)
+    if (Number.isInteger(filter) && filter > 0) {
+      localStorage.setItem('taskFilter', String(filter))
     } else {
       localStorage.removeItem('taskFilter')
     }
@@ -98,7 +113,7 @@ function InnerApp() {
     ? tasks.filter(t => t.titulo?.toLowerCase().includes(search.toLowerCase()))
     : tasks
   const allFilteredTasks = filter
-    ? allSearchedTasks.filter(t => t.categorias?.includes(filter))
+    ? allSearchedTasks.filter(t => t.categorias?.some(c => c.id === filter))
     : allSearchedTasks
 
   async function handleSave(data) {
@@ -248,6 +263,7 @@ function InnerApp() {
         tasks={tasks}
         active={filter}
         onChange={setFilter}
+        categories={categories}
       />
 
       <ProximasTarefas
@@ -310,7 +326,7 @@ function InnerApp() {
                   {search
                     ? `Nenhum resultado para "${search}".`
                     : filter
-                      ? 'Nenhuma tarefa nessa categoria.'
+                      ? 'Nenhuma tarefa com essa tag.'
                       : 'Nenhuma tarefa ainda. Clique em "+ Nova" para começar.'}
                 </p>
               </div>
@@ -338,6 +354,7 @@ function InnerApp() {
           tarefa={editing}
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditing(null) }}
+          categories={categories}
         />
       )}
 
@@ -356,6 +373,9 @@ function InnerApp() {
         onClose={() => setShowSettings(false)}
         theme={theme}
         onToggleTheme={toggleTheme}
+        categories={categories}
+        onCategoryChange={fetchCategories}
+        tasks={tasks}
       />
     </div>
   )

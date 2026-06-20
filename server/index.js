@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import tarefasRouter from './routes/tarefas.js'
+import categoriasRouter from './routes/categorias.js'
 import authRouter from './routes/auth.js'
 import { pushRouter } from './routes/push.js'
 import { startScheduler } from './notifications/scheduler.js'
@@ -37,6 +38,7 @@ app.use(cookieParser())
 
 app.use('/api/auth', authRouter)
 app.use('/api/tarefas', tarefasRouter)
+app.use('/api/categorias', categoriasRouter)
 app.use('/api/push', pushRouter)
 
 app.use((err, req, res, next) => {

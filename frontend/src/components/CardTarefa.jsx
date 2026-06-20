@@ -55,20 +55,6 @@ function daysOverdue(dateStr) {
   return Math.floor(diff / (1000 * 60 * 60 * 24))
 }
 
-const TAG_CLASSES = {
-  tecnico: 'tag-tecnico',
-  normal: 'tag-normal',
-  eventos: 'tag-eventos',
-  domestica: 'tag-domestica',
-}
-
-const TAG_LABELS = {
-  tecnico: 'Matéria Técnica',
-  normal: 'Matéria Normal',
-  eventos: 'Eventos',
-  domestica: 'Atividades Domésticas',
-}
-
 export default function CardTarefa({ tarefa, onToggle, onEdit, onDelete, compact, onDragStart, onDragOver, onDrop, isDragging }) {
   const urgent = isUrgent(tarefa.data_entrega)
   const upcoming = isUpcoming(tarefa.data_entrega)
@@ -130,8 +116,8 @@ export default function CardTarefa({ tarefa, onToggle, onEdit, onDelete, compact
       {!compact && tarefa.categorias?.length > 0 && (
         <div className="card-tags">
           {tarefa.categorias.map(cat => (
-            <span key={cat} className={`tag ${TAG_CLASSES[cat] || ''}`}>
-              {TAG_LABELS[cat] || cat}
+            <span key={cat.id} className="tag" style={{ backgroundColor: cat.cor + '26', color: cat.cor }}>
+              {cat.nome}
             </span>
           ))}
         </div>

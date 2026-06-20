@@ -29,7 +29,8 @@ router.get('/', tryHandler(async (req, res) => {
   const db = getPool()
   const { rows } = await db.query(`
     SELECT t.*, COALESCE(
-      (SELECT json_agg(c.nome) FROM tarefa_categoria tc
+      (SELECT json_agg(json_build_object('id', c.id, 'nome', c.nome, 'cor', c.cor))
+       FROM tarefa_categoria tc
        JOIN categorias c ON c.id = tc.categoria_id
        WHERE tc.tarefa_id = t.id), '[]'::json
     ) as categorias
@@ -83,16 +84,22 @@ router.post('/', tryHandler(async (req, res) => {
   const tarefaId = rows[0].id
 
   if (categorias?.length > 0) {
-    for (const cat of categorias) {
-      await db.query(`
-        INSERT INTO tarefa_categoria (tarefa_id, categoria_id)
-        SELECT $1, id FROM categorias WHERE nome = $2
-      `, [tarefaId, cat])
+    for (const catId of categorias) {
+      await db.query(
+        'INSERT INTO tarefa_categoria (tarefa_id, categoria_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+        [tarefaId, catId]
+      )
     }
   }
 
   const { rows: [row] } = await db.query('SELECT * FROM tarefas WHERE id = $1', [tarefaId])
-  res.status(201).json(tarefaComCategorias({ ...row, categorias: categorias || [] }))
+  const { rows: [catRow] } = await db.query(`
+    SELECT COALESCE(json_agg(json_build_object('id', c.id, 'nome', c.nome, 'cor', c.cor)), '[]'::json) as categorias
+    FROM tarefa_categoria tc
+    JOIN categorias c ON c.id = tc.categoria_id
+    WHERE tc.tarefa_id = $1
+  `, [tarefaId])
+  res.status(201).json(tarefaComCategorias({ ...row, categorias: catRow.categorias }))
 }))
 
 router.put('/:id', tryHandler(async (req, res) => {
@@ -128,11 +135,11 @@ router.put('/:id', tryHandler(async (req, res) => {
   if (categorias !== undefined) {
     await db.query('DELETE FROM tarefa_categoria WHERE tarefa_id = $1', [id])
     if (categorias.length > 0) {
-      for (const cat of categorias) {
-        await db.query(`
-          INSERT INTO tarefa_categoria (tarefa_id, categoria_id)
-          SELECT $1, id FROM categorias WHERE nome = $2
-        `, [id, cat])
+      for (const catId of categorias) {
+        await db.query(
+          'INSERT INTO tarefa_categoria (tarefa_id, categoria_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          [id, catId]
+        )
       }
     }
   }
@@ -141,7 +148,7 @@ router.put('/:id', tryHandler(async (req, res) => {
   if (!row) return res.status(404).json({ error: 'Tarefa não encontrada' })
 
   const { rows: [catRow] } = await db.query(`
-    SELECT COALESCE(json_agg(c.nome), '[]'::json) as categorias
+    SELECT COALESCE(json_agg(json_build_object('id', c.id, 'nome', c.nome, 'cor', c.cor)), '[]'::json) as categorias
     FROM tarefa_categoria tc
     JOIN categorias c ON c.id = tc.categoria_id
     WHERE tc.tarefa_id = $1
