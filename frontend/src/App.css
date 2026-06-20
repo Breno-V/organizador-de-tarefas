@@ -1828,6 +1828,193 @@ body {
   }
 }
 
+.onboarding-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 28px 24px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+  animation: slideUp 0.25s ease;
+  text-align: center;
+}
+
+.onboarding-illustration {
+  width: 120px;
+  height: 80px;
+  margin: 0 auto 20px;
+}
+
+.onboarding-illustration-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.onboarding-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-style: italic;
+  font-size: 1.3rem;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.onboarding-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 24px;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.onboarding-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid;
+  transition: all 0.2s ease;
+}
+
+.onboarding-dot:nth-child(1) { --dot-color: #2D6A4F; }
+.onboarding-dot:nth-child(2) { --dot-color: #5B4FCF; }
+.onboarding-dot:nth-child(3) { --dot-color: #B87A3A; }
+
+.onboarding-dot.active {
+  border-color: var(--dot-color);
+  background: var(--dot-color);
+}
+
+.onboarding-dot.past {
+  border-color: var(--dot-color);
+  background: var(--dot-color);
+  opacity: 0.35;
+}
+
+.onboarding-dot.future {
+  border-color: #D4C9B8;
+  background: transparent;
+}
+
+.onboarding-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.onboarding-skip {
+  font-size: 0.825rem;
+  color: var(--text-tertiary, #9C9C9C);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 0;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+
+.onboarding-skip:hover {
+  color: var(--text-secondary);
+}
+
+.onboarding-skip:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.onboarding-next {
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: #fff;
+  background: #2D6A4F;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.onboarding-next:hover {
+  background: #245a43;
+}
+
+.onboarding-next:focus-visible {
+  outline: 2px solid #2D6A4F;
+  outline-offset: 2px;
+}
+
+.onboarding-last-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.onboarding-create {
+  width: 100%;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+  background: #2D6A4F;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.onboarding-create:hover {
+  background: #245a43;
+}
+
+.onboarding-create:focus-visible {
+  outline: 2px solid #2D6A4F;
+  outline-offset: 2px;
+}
+
+.onboarding-explore {
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 0;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+
+.onboarding-explore:hover {
+  color: var(--text);
+}
+
+.onboarding-explore:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (max-width: 500px) {
+  .onboarding-card {
+    padding: 28px 20px 20px;
+    border-radius: 14px;
+  }
+}
+
 @media (max-height: 600px) {
   .auth-watermark {
     display: none;

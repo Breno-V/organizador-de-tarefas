@@ -69,6 +69,7 @@ export async function initDb() {
       ALTER TABLE categorias ADD COLUMN IF NOT EXISTS cor TEXT NOT NULL DEFAULT '#2B5F5F';
       ALTER TABLE categorias ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE;
       ALTER TABLE categorias DROP CONSTRAINT IF EXISTS categorias_nome_key;
+      ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS onboarded BOOLEAN DEFAULT true;
 
       CREATE UNIQUE INDEX IF NOT EXISTS idx_cat_nome_global ON categorias(nome) WHERE usuario_id IS NULL;
       CREATE UNIQUE INDEX IF NOT EXISTS idx_cat_nome_usuario ON categorias(nome, usuario_id) WHERE usuario_id IS NOT NULL;

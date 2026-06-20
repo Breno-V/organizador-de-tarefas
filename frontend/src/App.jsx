@@ -13,6 +13,7 @@ import LoginForm from './components/LoginForm'
 import RegisterForm from './components/RegisterForm'
 import { ToastProvider, useToast } from './components/Toast'
 import LoadingScreen from './components/LoadingScreen'
+import OnboardingModal from './components/OnboardingModal'
 import { toLocalDate } from './utils/date'
 import './App.css'
 
@@ -38,7 +39,7 @@ function getPeriodoTasks(tasks) {
 
 function InnerApp() {
   const { theme, toggle: toggleTheme } = useTheme()
-  const { user, loading: authLoading, logout } = useAuth()
+  const { user, loading: authLoading, logout, updateUser } = useAuth()
   const [showRegister, setShowRegister] = useState(false)
   const [tasks, setTasks] = useState([])
   const [categories, setCategories] = useState([])
@@ -55,6 +56,7 @@ function InnerApp() {
   const [draggedId, setDraggedId] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
   const [showAccount, setShowAccount] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
   const toast = useToast()
 
   useEffect(() => {
@@ -62,6 +64,26 @@ function InnerApp() {
       navigator.serviceWorker.register('/sw.js').catch(() => {})
     }
   }, [])
+
+  useEffect(() => {
+    if (user && user.onboarded === false) {
+      setShowOnboarding(true)
+    }
+  }, [user])
+
+  async function handleFinishOnboarding() {
+    setShowOnboarding(false)
+    updateUser({ onboarded: true })
+    localStorage.setItem('onboardingDone', '1')
+    try {
+      await fetch('/api/auth/onboarded', { method: 'PUT', credentials: 'include' })
+    } catch {}
+  }
+
+  function handleCreateTaskFromOnboarding() {
+    handleFinishOnboarding()
+    setShowForm(true)
+  }
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -241,7 +263,14 @@ function InnerApp() {
   }
 
   return (
-    <div className="app">
+    <>
+      {showOnboarding && (
+        <OnboardingModal
+          onComplete={handleFinishOnboarding}
+          onCreateTask={handleCreateTaskFromOnboarding}
+        />
+      )}
+      <div className="app">
       <header className="header">
         <div className="header-left">
           <h1 className="app-title">organizador</h1>
@@ -390,6 +419,7 @@ function InnerApp() {
         <AccountModal onClose={() => setShowAccount(false)} />
       )}
     </div>
+    </>
   )
 }
 

@@ -46,7 +46,7 @@ router.post('/register', authLimiter, tryHandler(async (req, res) => {
 
   const senha_hash = await bcrypt.hash(senha, 10)
   const { rows } = await db.query(
-    'INSERT INTO usuarios (nome, email, senha_hash) VALUES ($1, $2, $3) RETURNING id, nome, email',
+    'INSERT INTO usuarios (nome, email, senha_hash, onboarded) VALUES ($1, $2, $3, false) RETURNING id, nome, email, onboarded',
     [nome.trim(), email.trim().toLowerCase(), senha_hash]
   )
   const user = rows[0]
@@ -58,7 +58,7 @@ router.post('/register', authLimiter, tryHandler(async (req, res) => {
     sameSite: 'strict',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   })
-  res.status(201).json({ id: user.id, nome: user.nome, email: user.email })
+  res.status(201).json({ id: user.id, nome: user.nome, email: user.email, onboarded: user.onboarded })
 }))
 
 router.post('/login', authLimiter, tryHandler(async (req, res) => {
@@ -70,7 +70,7 @@ router.post('/login', authLimiter, tryHandler(async (req, res) => {
   }
 
   const { rows } = await db.query(
-    'SELECT id, nome, email, senha_hash FROM usuarios WHERE email = $1',
+    'SELECT id, nome, email, senha_hash, onboarded FROM usuarios WHERE email = $1',
     [email.trim().toLowerCase()]
   )
   if (rows.length === 0) {
@@ -91,12 +91,20 @@ router.post('/login', authLimiter, tryHandler(async (req, res) => {
     sameSite: 'strict',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   })
-  res.json({ id: user.id, nome: user.nome, email: user.email })
+  res.json({ id: user.id, nome: user.nome, email: user.email, onboarded: user.onboarded })
 }))
 
-router.get('/me', authMiddleware, (req, res) => {
-  res.json({ id: req.user.id, nome: req.user.nome, email: req.user.email })
-})
+router.get('/me', authMiddleware, tryHandler(async (req, res) => {
+  const db = getPool()
+  const { rows } = await db.query(
+    'SELECT id, nome, email, onboarded FROM usuarios WHERE id = $1',
+    [req.user.id]
+  )
+  if (rows.length === 0) {
+    return res.status(404).json({ error: 'Usuário não encontrado.' })
+  }
+  res.json(rows[0])
+}))
 
 router.post('/logout', (req, res) => {
   res.clearCookie('token')
@@ -134,6 +142,12 @@ router.put('/senha', authMiddleware, tryHandler(async (req, res) => {
 
   const nova_hash = await bcrypt.hash(nova_senha, 10)
   await db.query('UPDATE usuarios SET senha_hash = $1 WHERE id = $2', [nova_hash, req.user.id])
+  res.json({ ok: true })
+}))
+
+router.put('/onboarded', authMiddleware, tryHandler(async (req, res) => {
+  const db = getPool()
+  await db.query('UPDATE usuarios SET onboarded = true WHERE id = $1', [req.user.id])
   res.json({ ok: true })
 }))
 
