@@ -27,6 +27,8 @@ function sendNotification(sub, title, body, taskId, milestone) {
     if (err.statusCode === 410 || err.statusCode === 404) {
       const db = getPool()
       await db.query('DELETE FROM push_subscriptions WHERE endpoint = $1', [sub.endpoint])
+    } else if (err.statusCode === 401 || err.statusCode === 403) {
+      console.error('[Push] Erro de autenticação VAPID — chave pública/privada mudou?', err.statusCode)
     }
   })
 }
@@ -74,8 +76,8 @@ async function checkAndNotify() {
       const overdueTasks = []
 
       for (const task of tasks) {
-        const due = task.data_entrega instanceof Date ? task.data_entrega : new Date(task.data_entrega)
-        const dueMs = due.getTime()
+        const dueRaw = task.data_entrega instanceof Date ? task.data_entrega : new Date(task.data_entrega)
+        const dueMs = dueRaw.getTime() + dueRaw.getTimezoneOffset() * 60000
         const nowMs = now.getTime()
         const diffMs = dueMs - nowMs
 

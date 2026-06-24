@@ -153,7 +153,7 @@ router.put('/:id', writeLimiter, tryHandler(async (req, res) => {
     )
   }
 
-  if (data_entrega !== undefined || (concluida !== undefined && concluida)) {
+  if (data_entrega !== undefined || concluida !== undefined) {
     await db.query('DELETE FROM task_reminders_sent WHERE tarefa_id = $1', [id])
   }
 

@@ -145,12 +145,13 @@ export default function SettingsPanel({ open, onClose, theme, onToggleTheme, use
         })
         const subBody = newSub.toJSON()
         subBody.reminders = true
-        await fetch('/api/push/subscribe', {
+        const res = await fetch('/api/push/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(subBody),
         })
+        if (!res.ok) throw new Error('Falha ao salvar inscrição')
         setPushEnabled(true)
         setReminderEnabled(true)
       }
@@ -164,12 +165,13 @@ export default function SettingsPanel({ open, onClose, theme, onToggleTheme, use
       if (sub) {
         const newSub = sub.toJSON()
         newSub.reminders = !reminderEnabled
-        await fetch('/api/push/subscribe', {
+        const res = await fetch('/api/push/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(newSub),
         })
+        if (!res.ok) throw new Error('Falha ao salvar inscrição')
         setReminderEnabled(!reminderEnabled)
       }
     }

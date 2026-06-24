@@ -18,8 +18,8 @@ export default function NotificationBanner() {
     if (perm === 'granted') {
       try {
         const reg = await navigator.serviceWorker.ready
-        const res = await fetch('/api/push/vapid-public-key')
-        const publicKey = await res.text()
+        const keyRes = await fetch('/api/push/vapid-public-key')
+        const publicKey = await keyRes.text()
         if (!publicKey) return
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
@@ -27,12 +27,13 @@ export default function NotificationBanner() {
         })
         const subBody = sub.toJSON()
         subBody.reminders = true
-        await fetch('/api/push/subscribe', {
+        const res = await fetch('/api/push/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(subBody),
         })
+        if (!res.ok) throw new Error('Falha ao salvar inscrição')
       } catch {}
     }
   }
